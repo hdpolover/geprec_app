@@ -2,12 +2,16 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:geprec_app/models/pengguna_model.dart';
+import 'package:geprec_app/screens/coba_gambar.dart';
 import 'package:geprec_app/screens/kunjungan.dart';
+import 'package:geprec_app/screens/map_sample.dart';
 import 'package:geprec_app/screens/riwayat.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 
 class Dashboard extends StatefulWidget {
-  const Dashboard({Key? key}) : super(key: key);
+  PenggunaModel pengguna;
+  Dashboard({required this.pengguna, Key? key}) : super(key: key);
 
   @override
   State<Dashboard> createState() => _DashboardState();
@@ -35,7 +39,18 @@ class _DashboardState extends State<Dashboard> {
   }
 
   List<Widget> _buildScreens() {
-    return [Kunjungan(), Riwayat()];
+    return [
+      MapSample(
+        pengguna: widget.pengguna,
+      ),
+      // Kunjungan(
+      //   pengguna: widget.pengguna,
+      // ),
+      // CobaGambar(),
+      Riwayat(
+        pengguna: widget.pengguna,
+      )
+    ];
   }
 
   @override

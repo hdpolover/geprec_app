@@ -1,3 +1,3 @@
 class AppConstants {
-  static const String baseUrl = "";
+  static const String baseUrl = "http://geprec.com/";
 }

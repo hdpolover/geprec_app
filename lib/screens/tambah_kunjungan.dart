@@ -1,13 +1,18 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geprec_app/models/pengguna_model.dart';
+import 'package:geprec_app/services/kunjungan_service.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
 
 class TambahKunjungan extends StatefulWidget {
-  TambahKunjungan({Key? key}) : super(key: key);
+  PenggunaModel pengguna;
+  TambahKunjungan({required this.pengguna, Key? key}) : super(key: key);
 
   @override
   State<TambahKunjungan> createState() => _TambahKunjunganState();
@@ -34,6 +39,7 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
 
   final ImagePicker _picker = ImagePicker();
   XFile? _imageFile;
+  String? base64ImageFile;
 
   void _setImageFileListFromFile(XFile? value) {
     _imageFile = value;
@@ -46,6 +52,17 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
       );
       setState(() {
         _setImageFileListFromFile(pickedFile);
+      });
+
+      var bytes = File(_imageFile!.path).readAsBytesSync();
+      String base64Image = base64Encode(bytes);
+
+      File file = File(_imageFile!.path);
+      String fileExtension = p.extension(file.path);
+
+      setState(() {
+        base64ImageFile =
+            "data:image/${fileExtension.split('.').last};base64,$base64Image";
       });
     } catch (e) {
       print(e);
@@ -143,6 +160,8 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
     return true;
   }
 
+  final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
@@ -156,175 +175,203 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Nomor Pelanggan",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: noPelangganController,
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Masukan nomor pelanggan',
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "Nama Rumah",
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Nomor Meteran",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: noMeteranController,
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Masukan nomor meteran',
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Nama Rumah",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: namaRumahController,
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Masukan nama rumah',
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Alamat",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: addressController,
-                readOnly: true,
-                autofocus: false,
-                maxLines: null,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: '-',
-                ),
-              ),
-              const SizedBox(height: 5),
-              Align(
-                alignment: Alignment.centerRight,
-                child: isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(10),
-                        child: CircularProgressIndicator(),
-                      )
-                    : ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            isLoading = true;
-                          });
-
-                          _getCurrentPosition();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          primary: _currentAddress == null
-                              ? Theme.of(context).colorScheme.primary
-                              : Colors.red, // background
-                          onPrimary: Colors.white, // foreground
-                        ),
-                        icon: const Icon(Icons.location_pin),
-                        label: Text(
-                          _currentAddress == null
-                              ? 'Ambil alamat sekarang'
-                              : "Ulangi ambil alamat",
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Catatan (patokan, detail rumah, dll) *opsional",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: noteController,
-                minLines: 5,
-                maxLines: 10,
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Masukan catatan',
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "Foto Meteran",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                onTap: () {
-                  takePhoto(context: context);
-                  //selectFile();
-                },
-                child: Container(
-                  height: _imageFile != null ? null : height * 0.2,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: namaRumahController,
+                  keyboardType: TextInputType.text,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Masukan nama rumah',
                   ),
-                  padding: _imageFile != null
-                      ? const EdgeInsets.all(0)
-                      : const EdgeInsets.all(10),
-                  child: _imageFile != null
-                      ? Image.file(
-                          File(_imageFile!.path),
-                          fit: BoxFit.cover,
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.upload,
-                              size: 30,
-                            ),
-                            const SizedBox(height: 5),
-                            const Text("Ambil Gambar"),
-                          ],
-                        ),
                 ),
-              ),
-              const SizedBox(height: 30),
-              SizedBox(
-                height: 50,
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    onPrimary: Colors.white, // foreground
+                const SizedBox(height: 20),
+                const Text(
+                  "Alamat",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: addressController,
+                  readOnly: true,
+                  autofocus: false,
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: '-',
                   ),
+                ),
+                const SizedBox(height: 5),
+                Align(
+                  alignment: Alignment.centerRight,
                   child: isLoading
-                      ? const CircularProgressIndicator(
-                          color: Colors.white,
+                      ? const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: CircularProgressIndicator(),
                         )
-                      : const Text('Simpan'),
-                  onPressed: () {
-                    // _savePackage();
-                  },
+                      : ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              isLoading = true;
+                            });
+
+                            _getCurrentPosition();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            primary: _currentAddress == null
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.red, // background
+                            onPrimary: Colors.white, // foreground
+                          ),
+                          icon: const Icon(Icons.location_pin),
+                          label: Text(
+                            _currentAddress == null
+                                ? 'Ambil alamat sekarang'
+                                : "Ulangi ambil alamat",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 20),
+                const Text(
+                  "Catatan (patokan, detail rumah, dll) *opsional",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: noteController,
+                  minLines: 5,
+                  maxLines: 10,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Masukan catatan',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Foto Rumah",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
+                    takePhoto(context: context);
+                    //selectFile();
+                  },
+                  child: Container(
+                    height: _imageFile != null ? null : height * 0.2,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    padding: _imageFile != null
+                        ? const EdgeInsets.all(0)
+                        : const EdgeInsets.all(10),
+                    child: _imageFile != null
+                        ? Image.file(
+                            File(_imageFile!.path),
+                            fit: BoxFit.cover,
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.upload,
+                                size: 30,
+                              ),
+                              const SizedBox(height: 5),
+                              const Text("Ambil Foto"),
+                            ],
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                SizedBox(
+                  height: 50,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      onPrimary: Colors.white, // foreground
+                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text('Simpan'),
+                    onPressed: () {
+                      // _savePackage();
+                      setState(() {
+                        isLoading = true;
+                      });
+
+                      simpanData();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  simpanData() async {
+    Map<String, dynamic> data = {
+      'id_pengguna': widget.pengguna.idPengguna,
+      'nama_kunjungan': namaRumahController.text,
+      'alamat': addressController.text,
+      'catatan': noteController.text,
+      'latitude_awal': _currentPosition!.latitude,
+      'longitude_awal': _currentPosition!.longitude,
+      'latitude_baru': _currentPosition!.latitude,
+      'longitude_baru': _currentPosition!.longitude,
+      'foto_kunjungan': base64ImageFile,
+    };
+
+    bool result = await KunjunganService.tambahKunjungan(data);
+
+    if (result) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text("Berhasil menambahkan kunjungan"),
+          ),
+        ),
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      Navigator.of(context).pop();
+    } else {
+      print("gagal");
+
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text("Gagal menambahkan kunjungan. Coba lagi."),
+          ),
+        ),
+      );
+    }
   }
 }

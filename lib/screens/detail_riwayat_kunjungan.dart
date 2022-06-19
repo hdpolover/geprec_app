@@ -63,7 +63,6 @@ class _DetailRiwayatKunjunganState extends State<DetailRiwayatKunjungan> {
                   FancyShimmerImage(
                     width: double.infinity,
                     boxFit: BoxFit.contain,
-                    height: MediaQuery.of(context).size.height * 0.5,
                     imageUrl: widget.riwayatKunjungan.fotoMeteran!,
                     errorWidget: Image.network(
                         'https://i0.wp.com/www.dobitaobyte.com.br/wp-content/uploads/2016/02/no_image.png?ssl=1'),
@@ -77,7 +76,6 @@ class _DetailRiwayatKunjunganState extends State<DetailRiwayatKunjungan> {
                   FancyShimmerImage(
                     width: double.infinity,
                     boxFit: BoxFit.contain,
-                    height: MediaQuery.of(context).size.height * 0.5,
                     imageUrl: widget.riwayatKunjungan.fotoSelfie!,
                     errorWidget: Image.network(
                         'https://i0.wp.com/www.dobitaobyte.com.br/wp-content/uploads/2016/02/no_image.png?ssl=1'),
@@ -139,83 +137,5 @@ class _DetailRiwayatKunjunganState extends State<DetailRiwayatKunjungan> {
     }
 
     return c;
-  }
-
-  void buildOkDialog(BuildContext context) {
-    showGeneralDialog(
-      barrierLabel: "Barrier",
-      barrierDismissible: false,
-      barrierColor: Colors.black.withOpacity(0.5),
-      transitionDuration: const Duration(milliseconds: 100),
-      context: context,
-      pageBuilder: (_, __, ___) {
-        return Align(
-          alignment: Alignment.center,
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.45,
-            padding: const EdgeInsets.all(20),
-            margin: const EdgeInsets.only(top: 150, left: 32, right: 32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: SizedBox.expand(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 10),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Icon(
-                        Icons.error,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: Text(
-                      "Pastikan Anda berada kurang dari radius 200 meter dari tempat yang akan dikunjungi. Coba lagi.",
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .headline6
-                          ?.copyWith(fontWeight: FontWeight.normal),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Center(
-                    child: SizedBox(
-                      width: 213,
-                      height: 55,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary),
-                        onPressed: () {
-                          Navigator.of(context, rootNavigator: true).pop();
-                        },
-                        child: const Text(
-                          'OK',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
   }
 }

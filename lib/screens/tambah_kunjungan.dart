@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:form_field_validator/form_field_validator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geprec_app/models/pengguna_model.dart';
@@ -24,6 +25,15 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
   TextEditingController addressController = TextEditingController();
   TextEditingController namaRumahController = TextEditingController();
   TextEditingController noteController = TextEditingController();
+
+  final _wajibValidator = MultiValidator([
+    RequiredValidator(errorText: 'Harap isi kolom ini'),
+  ]);
+
+  final _wajibAlamatValidator = MultiValidator([
+    RequiredValidator(
+        errorText: 'Tekan tombol ambil alamat untuk mengisi kolom ini'),
+  ]);
 
   @override
   void dispose() {
@@ -70,6 +80,7 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
   }
 
   bool isLoading = false;
+  bool isLoadingAlamat = false;
 
   String? url;
 
@@ -124,7 +135,7 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
       _currentAddress = address;
       addressController.text = _currentAddress!;
 
-      isLoading = false;
+      isLoadingAlamat = false;
     });
   }
 
@@ -186,9 +197,10 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                TextFormField(
                   controller: namaRumahController,
                   keyboardType: TextInputType.text,
+                  validator: _wajibValidator,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: 'Masukan nama rumah',
@@ -200,11 +212,12 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
-                TextField(
+                TextFormField(
                   controller: addressController,
                   readOnly: true,
                   autofocus: false,
                   maxLines: null,
+                  validator: _wajibAlamatValidator,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     hintText: '-',
@@ -213,7 +226,7 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
                 const SizedBox(height: 5),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: isLoading
+                  child: isLoadingAlamat
                       ? const Padding(
                           padding: EdgeInsets.all(10),
                           child: CircularProgressIndicator(),
@@ -221,7 +234,7 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
                       : ElevatedButton.icon(
                           onPressed: () {
                             setState(() {
-                              isLoading = true;
+                              isLoadingAlamat = true;
                             });
 
                             _getCurrentPosition();
@@ -259,7 +272,7 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Foto Rumah",
+                  "Foto Rumah *opsional",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
@@ -310,12 +323,13 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
                           )
                         : const Text('Simpan'),
                     onPressed: () {
-                      // _savePackage();
-                      setState(() {
-                        isLoading = true;
-                      });
+                      if (_formKey.currentState!.validate()) {
+                        setState(() {
+                          isLoading = true;
+                        });
 
-                      simpanData();
+                        simpanData();
+                      }
                     },
                   ),
                 ),
@@ -332,12 +346,12 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
       'id_pengguna': widget.pengguna.idPengguna,
       'nama_kunjungan': namaRumahController.text,
       'alamat': addressController.text,
-      'catatan': noteController.text,
+      'catatan': noteController.text.trim(),
       'latitude_awal': _currentPosition!.latitude,
       'longitude_awal': _currentPosition!.longitude,
       'latitude_baru': _currentPosition!.latitude,
       'longitude_baru': _currentPosition!.longitude,
-      'foto_kunjungan': base64ImageFile,
+      'foto_kunjungan': base64ImageFile ?? "",
     };
 
     bool result = await KunjunganService.tambahKunjungan(data);

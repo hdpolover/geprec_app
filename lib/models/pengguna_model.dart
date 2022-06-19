@@ -4,6 +4,7 @@ class PenggunaModel {
   String? password;
   String? nama;
   String? fotoPengguna;
+  String? status;
 
   PenggunaModel(
     this.idPengguna,
@@ -11,6 +12,7 @@ class PenggunaModel {
     this.password,
     this.nama,
     this.fotoPengguna,
+    this.status,
   );
 
   factory PenggunaModel.fromMap(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class PenggunaModel {
       json['password'],
       json['nama'],
       json['foto_pengguna'],
+      json['status'],
     );
   }
 
@@ -30,6 +33,7 @@ class PenggunaModel {
       json['password'],
       json['nama'],
       json['foto_pengguna'],
+      json['status'],
     );
   }
 }

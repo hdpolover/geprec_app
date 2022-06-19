@@ -31,7 +31,7 @@ class RiwayatKunjunganModel {
       json['id_gas_pelanggan'],
       json['pembacaan_meter'],
       DateTime.parse(json['tgl_kunjungan']),
-      json['rstatus_riwayat'],
+      json['rstatus'],
     );
   }
 
@@ -45,7 +45,7 @@ class RiwayatKunjunganModel {
       json['id_gas_pelanggan'],
       json['pembacaan_meter'],
       DateTime.parse(json['tgl_kunjungan']),
-      json['rstatus_riwayat'],
+      json['rstatus'],
     );
   }
 }

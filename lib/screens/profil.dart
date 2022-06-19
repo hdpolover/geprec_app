@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprec_app/models/pengguna_model.dart';
+import 'package:geprec_app/screens/draft.dart';
 import 'package:geprec_app/screens/login.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
@@ -62,12 +63,34 @@ class _ProfilState extends State<Profil> {
                   height: 50,
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: ElevatedButton(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      onPrimary: Colors.white, // foreground
+                    ),
+                    icon: const Icon(Icons.archive),
+                    label: const Text('Draft Kunjungan'),
+                    onPressed: () async {
+                      pushNewScreen(
+                        context,
+                        screen: const Draft(),
+                        withNavBar: false, // OPTIONAL VALUE. True by default.
+                        pageTransitionAnimation: PageTransitionAnimation.fade,
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  height: 50,
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       primary: Colors.red, // background
                       onPrimary: Colors.white, // foreground
                     ),
-                    child: const Text('Keluar'),
+                    icon: const Icon(Icons.exit_to_app),
+                    label: const Text('Keluar'),
                     onPressed: () async {
                       pushNewScreen(
                         context,

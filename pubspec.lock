@@ -99,6 +99,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.5"
+  double_back_to_close_app:
+    dependency: "direct main"
+    description:
+      name: double_back_to_close_app
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.0"
   fake_async:
     dependency: transitive
     description:
@@ -153,13 +160,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.3.0"
-  flutter_exif_plugin:
-    dependency: "direct main"
+  flutter_launcher_icons:
+    dependency: "direct dev"
     description:
-      name: flutter_exif_plugin
+      name: flutter_launcher_icons
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.1.0"
+    version: "0.9.3"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -283,7 +290,7 @@ packages:
     source: hosted
     version: "4.0.1"
   image:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: image
       url: "https://pub.dartlang.org"
@@ -324,13 +331,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.5.0"
-  image_watermark:
-    dependency: "direct main"
-    description:
-      name: image_watermark
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.3"
   intl:
     dependency: "direct main"
     description:
@@ -714,13 +714,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.10.0"
-  stamp_image:
-    dependency: "direct main"
-    description:
-      name: stamp_image
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.2"
   stream_channel:
     dependency: transitive
     description:
@@ -882,6 +875,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "6.1.0"
+  yaml:
+    dependency: transitive
+    description:
+      name: yaml
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.1.1"
 sdks:
   dart: ">=2.17.1 <3.0.0"
   flutter: ">=3.0.0"

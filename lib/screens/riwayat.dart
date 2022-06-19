@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geprec_app/models/pengguna_model.dart';
 import 'package:geprec_app/models/riwayat_kunjungan_model.dart';
-import 'package:geprec_app/screens/widgets/kunjungan_item.dart';
+import 'package:geprec_app/screens/riwayat_search.dart';
 import 'package:geprec_app/screens/widgets/riwayat_kunjungan_item.dart';
 import 'package:geprec_app/services/riwayat_kunjungan_service.dart';
 
@@ -16,14 +16,57 @@ class Riwayat extends StatefulWidget {
 class _RiwayatState extends State<Riwayat> {
   List<RiwayatKunjunganModel>? riwayat;
 
+  DateTime selectedDate = DateTime.now();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2022),
+      lastDate: DateTime(2100),
+      // builder: (context, child) => Theme(
+      //     // data: ThemeData().copyWith(
+      //     //   colorScheme:
+      //     //       const ColorScheme.light(primary: CustomColors.colorGreen),
+      //     // ),
+      //     child: child!),
+    );
+
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        //_dateController.text = DateFormat.MMMMEEEEd().format(selectedDate);
+      });
+    }
+  }
+
   getDaftarRiwayatKunjungan() {
     return FutureBuilder(
       future: RiwayatKunjunganService.getRiwayatKunjungan(
           widget.pengguna.idPengguna!),
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
-          return const Center(
-            child: CircularProgressIndicator(),
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.warning,
+                    color: Colors.red,
+                    size: 50,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Anda belum memiliki riwayat kunjungan. Silakan melakukan kunjungan terlebih dahulu.",
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
           );
         }
 
@@ -63,7 +106,29 @@ class _RiwayatState extends State<Riwayat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Riwayat Kunjungan")),
+      appBar: AppBar(
+        title: const Text("Riwayat Kunjungan"),
+        actions: [
+          // Navigate to the Search Screen
+          // IconButton(
+          //   onPressed: () {
+          //     _selectDate(context);
+          //   },
+          //   icon: const Icon(Icons.calendar_today),
+          // ),
+          IconButton(
+            onPressed: () {
+              riwayat == null
+                  ? null
+                  : showSearch(
+                      context: context,
+                      delegate: RiwayatSearch(riwayat),
+                    );
+            },
+            icon: const Icon(Icons.search),
+          )
+        ],
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _onRefresh,

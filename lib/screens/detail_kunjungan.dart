@@ -1,14 +1,25 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geprec_app/models/kunjungan_model.dart';
+import 'package:geprec_app/models/pengguna_model.dart';
 import 'package:geprec_app/screens/form_kunjungi.dart';
+import 'package:geprec_app/services/kunjungan_service.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
+import 'package:path/path.dart' as p;
+import 'package:url_launcher/url_launcher.dart';
 
 class DetailKunjungan extends StatefulWidget {
   KunjunganModel kunjungan;
-  DetailKunjungan({required this.kunjungan, Key? key}) : super(key: key);
+  PenggunaModel pengguna;
+  DetailKunjungan({required this.pengguna, required this.kunjungan, Key? key})
+      : super(key: key);
 
   @override
   State<DetailKunjungan> createState() => _DetailKunjunganState();
@@ -28,18 +39,48 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
       return;
     }
 
-    _currentPosition = await _geolocatorPlatform.getCurrentPosition(
+    Position pos = await _geolocatorPlatform.getCurrentPosition(
         locationSettings: const LocationSettings(
       accuracy: LocationAccuracy.high,
     ));
 
-    String address = await getAddressFromLatLong(_currentPosition!);
+    String address = await getAddressFromLatLong(pos);
 
     setState(() {
+      _currentPosition = pos;
       _currentAddress = address;
 
       isLoading = false;
     });
+
+    Map<String, dynamic> data = {
+      "alamat": _currentAddress,
+      "latitude_baru": _currentPosition!.latitude,
+      "longitude_baru": _currentPosition!.longitude,
+    };
+
+    bool result = await KunjunganService.updateLokasiKunjungan(
+        widget.kunjungan.idKunjungan!, data);
+
+    if (result) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text("Berhasil menyimpan lokasi baru."),
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text("Gagal menyimpan lokasi baru. Coba lagi."),
+          ),
+        ),
+      );
+    }
   }
 
   Future<String> getAddressFromLatLong(Position position) async {
@@ -74,6 +115,87 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
     return true;
   }
 
+  final ImagePicker _picker = ImagePicker();
+  XFile? _imageFile;
+  String? base64ImageFile;
+
+  void _setImageFileListFromFile(XFile? value) {
+    _imageFile = value;
+  }
+
+  Future<void> takePhoto({BuildContext? context, String? msg}) async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        imageQuality: 90,
+        source: ImageSource.camera,
+      );
+      setState(() {
+        _setImageFileListFromFile(pickedFile);
+      });
+
+      var bytes = File(_imageFile!.path).readAsBytesSync();
+      String base64Image = base64Encode(bytes);
+
+      File file = File(_imageFile!.path);
+      String fileExtension = p.extension(file.path);
+
+      setState(() {
+        base64ImageFile =
+            "data:image/${fileExtension.split('.').last};base64,$base64Image";
+      });
+
+      Future.delayed(const Duration(seconds: 2), () {
+        ScaffoldMessenger.of(context!).showSnackBar(
+          SnackBar(
+            content: Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(msg!),
+            ),
+          ),
+        );
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  buildLastKunjungan() {
+    return FutureBuilder(
+      future: KunjunganService.getLastKunjungan(
+          widget.pengguna.idPengguna!, widget.kunjungan.idKunjungan!),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Chip(
+            backgroundColor: Colors.red,
+            labelPadding: EdgeInsets.all(7),
+            label: Text(
+              "Belum pernah dikunjungi",
+              style: TextStyle(
+                color: Colors.white,
+              ),
+            ),
+          );
+        }
+
+        DateTime lastTanggalKunjungan = snapshot.data as DateTime;
+
+        String formatTanggal =
+            DateFormat("dd-MM-yyyy").format(lastTanggalKunjungan);
+
+        return Chip(
+          backgroundColor: Colors.green,
+          labelPadding: const EdgeInsets.all(7),
+          label: Text(
+            "Terakhir dikunjungi pada $formatTanggal",
+            style: const TextStyle(
+              color: Colors.white,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,25 +213,18 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
                   children: [
                     FancyShimmerImage(
                       width: double.infinity,
+                      height: MediaQuery.of(context).size.height * 0.5,
                       boxFit: BoxFit.cover,
                       imageUrl: widget.kunjungan.fotoKunjungan!,
                       errorWidget: Image.network(
                           'https://i0.wp.com/www.dobitaobyte.com.br/wp-content/uploads/2016/02/no_image.png?ssl=1'),
                     ),
-                    const Positioned.fill(
+                    Positioned.fill(
                       right: 10,
                       bottom: 10,
                       child: Align(
                         alignment: Alignment.bottomRight,
-                        child: Chip(
-                            backgroundColor: Colors.grey,
-                            labelPadding: EdgeInsets.all(5),
-                            label: Text(
-                              "Terakhir dikunjungi pada 10 juni 2022",
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            )),
+                        child: buildLastKunjungan(),
                       ),
                     ),
                   ],
@@ -122,68 +237,94 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
                     children: [
                       const SizedBox(height: 20),
                       const Text(
-                        "Nomor Pelanggan",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "#${widget.kunjungan.nomorPelanggan!}",
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Nomor Meteran",
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(widget.kunjungan.nomorMeteran!),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Nama Kunjungan",
+                        "Nama Rumah",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
                       Text(widget.kunjungan.namaKunjungan!),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 30),
                       const Text(
                         "Alamat",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
-                      Text(widget.kunjungan.alamat!),
+                      Text(_currentAddress != null
+                          ? _currentAddress!
+                          : widget.kunjungan.alamat!),
                       const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: isLoading
-                            ? const Padding(
-                                padding: EdgeInsets.all(10),
-                                child: CircularProgressIndicator(),
-                              )
-                            : ElevatedButton.icon(
-                                onPressed: () {
-                                  setState(() {
-                                    isLoading = true;
-                                  });
+                      Text(_currentPosition != null
+                          ? "[Latitude: ${_currentPosition!.latitude}, Longitude: ${_currentPosition!.longitude}]"
+                          : "[Latitude: ${widget.kunjungan.latitudeBaru}, Longitude: ${widget.kunjungan.longitudeBaru}]"),
+                      const SizedBox(height: 10),
+                      widget.kunjungan.resetLokasi == "1"
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    launchMapUrl(_currentAddress != null
+                                        ? _currentAddress!
+                                        : widget.kunjungan.alamat!);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    onPrimary: Colors.white, // foreground
+                                  ),
+                                  icon: const Icon(Icons.map),
+                                  label: const Text(
+                                    "Navigasi GMaps",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                                isLoading
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: CircularProgressIndicator(),
+                                      )
+                                    : ElevatedButton.icon(
+                                        onPressed: () {
+                                          setState(() {
+                                            isLoading = true;
+                                          });
 
-                                  _getCurrentPosition();
+                                          _getCurrentPosition();
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          primary: Colors.red, // background
+                                          onPrimary: Colors.white, // foreground
+                                        ),
+                                        icon: const Icon(Icons.location_pin),
+                                        label: const Text(
+                                          "Reset alamat",
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                              ],
+                            )
+                          : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  launchMapUrl(widget.kunjungan.alamat!);
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  primary: Colors.red, // background
                                   onPrimary: Colors.white, // foreground
                                 ),
-                                icon: const Icon(Icons.location_pin),
+                                icon: const Icon(Icons.map),
                                 label: const Text(
-                                  "Ulangi ambil alamat",
+                                  "Navigasi GMaps",
                                   style: TextStyle(color: Colors.white),
                                 ),
                               ),
-                      ),
-                      const SizedBox(height: 10),
+                            ),
+                      const SizedBox(height: 20),
                       const Text(
                         "Catatan",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
-                      Text(widget.kunjungan.catatan!),
+                      Text(widget.kunjungan.catatan!.trim().isEmpty
+                          ? "-"
+                          : widget.kunjungan.catatan!),
                       SizedBox(
                           height: MediaQuery.of(context).size.height * 0.1),
                     ],
@@ -205,7 +346,11 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
                       child: SizedBox(
                         height: 50,
                         child: ElevatedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            takePhoto(
+                                context: context,
+                                msg: "Foto selfie berhasil disimpan.");
+                          },
                           icon: const Icon(Icons.camera_alt),
                           label: const Text('Ambil Selfie'),
                           style: ElevatedButton.styleFrom(
@@ -220,16 +365,41 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
                         height: 50,
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            //buildOkDialog(context);
+                            if (base64ImageFile != null) {
+                              Map<String, dynamic> data = {
+                                "foto_selfie": base64ImageFile,
+                                "id_kunjungan": widget.kunjungan.idKunjungan,
+                                "id_pengguna": widget.pengguna.idPengguna,
+                              };
 
-                            pushNewScreen(
-                              context,
-                              screen: FormKunjungan(),
-                              withNavBar:
-                                  false, // OPTIONAL VALUE. True by default.
-                              pageTransitionAnimation:
-                                  PageTransitionAnimation.fade,
-                            );
+                              pushNewScreen(
+                                context,
+                                screen: FormKunjungan(
+                                  data: data,
+                                ),
+                                withNavBar:
+                                    false, // OPTIONAL VALUE. True by default.
+                                pageTransitionAnimation:
+                                    PageTransitionAnimation.fade,
+                              );
+                            } else {
+                              Map<String, dynamic> data = {
+                                "foto_selfie": "",
+                                "id_kunjungan": widget.kunjungan.idKunjungan,
+                                "id_pengguna": widget.pengguna.idPengguna,
+                              };
+
+                              pushNewScreen(
+                                context,
+                                screen: FormKunjungan(
+                                  data: data,
+                                ),
+                                withNavBar:
+                                    false, // OPTIONAL VALUE. True by default.
+                                pageTransitionAnimation:
+                                    PageTransitionAnimation.fade,
+                              );
+                            }
                           },
                           icon: const Icon(Icons.directions),
                           label: const Text('Kunjungi'),
@@ -247,6 +417,16 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
         ],
       ),
     );
+  }
+
+  Future<void> launchMapUrl(String address) async {
+    String query = Uri.encodeComponent(address);
+    String googleUrl = "google.navigation:q=$query";
+    Uri googleUri = Uri.parse(googleUrl);
+
+    if (await canLaunchUrl(googleUri)) {
+      await launchUrl(googleUri);
+    }
   }
 
   void buildOkDialog(BuildContext context) {

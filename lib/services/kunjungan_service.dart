@@ -64,6 +64,31 @@ class KunjunganService {
     // }
   }
 
+  static Future<bool> hapusKunjungan(String idKunjungan) async {
+    String url = "${AppConstants.baseUrl}api/kunjungan/delete_kunjungan";
+
+    try {
+      final http.Response response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'id_kunjungan': idKunjungan,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        print(response.body);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
   static Future<bool> updateLokasiKunjungan(
       String idKunjungan, Map<String, dynamic> data) async {
     String url =

@@ -203,6 +203,15 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
         title: const Text("Detail Kunjungan"),
         centerTitle: true,
         elevation: 1,
+        actions: [
+          IconButton(
+              onPressed: () {
+                buildYakinDelete(context);
+              },
+              icon: const Icon(
+                Icons.delete,
+              )),
+        ],
       ),
       body: Stack(
         children: [
@@ -416,6 +425,131 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
           ),
         ],
       ),
+    );
+  }
+
+  void buildYakinDelete(BuildContext context) {
+    showGeneralDialog(
+      barrierLabel: "Barrier",
+      barrierDismissible: false,
+      barrierColor: Colors.black.withOpacity(0.5),
+      transitionDuration: const Duration(milliseconds: 100),
+      context: context,
+      pageBuilder: (_, __, ___) {
+        return Align(
+          alignment: Alignment.center,
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.5,
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.only(top: 150, left: 32, right: 32),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: SizedBox.expand(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.error,
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      "Apa Anda yakin ingin menghapus item kunjungan ini? Tindakan ini tidak bisa diulang.",
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline6
+                          ?.copyWith(fontWeight: FontWeight.normal),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.02),
+                  Center(
+                    child: SizedBox(
+                      width: 213,
+                      height: 55,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.green),
+                        child: Text("BATAL",
+                            style: Theme.of(context)
+                                .textTheme
+                                .subtitle2
+                                ?.copyWith(color: Colors.white)),
+                        onPressed: () {
+                          Navigator.of(context, rootNavigator: true).pop();
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  Center(
+                    child: SizedBox(
+                      width: 213,
+                      height: 55,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.red),
+                        onPressed: () async {
+                          bool result = await KunjunganService.hapusKunjungan(
+                              widget.kunjungan.idKunjungan!);
+
+                          if (result) {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                      "Berhasil menghapus draft kunjungan."),
+                                ),
+                              ),
+                            );
+                          } else {
+                            Navigator.of(context).pop();
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Padding(
+                                  padding: EdgeInsets.only(bottom: 10),
+                                  child: Text(
+                                      "Kunjungan ini sudah memiliki riwayat. Tidak dapat dihapus. Silakan hubungi admin."),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text(
+                          "HAPUS",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

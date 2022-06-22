@@ -4,11 +4,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:form_field_validator/form_field_validator.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geprec_app/db/db_helper.dart';
 import 'package:geprec_app/screens/widgets/draft_helper.dart';
 import 'package:geprec_app/services/kunjungan_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+
+import '../db/draft_model.dart';
 
 class FormKunjungan extends StatefulWidget {
   Map<String, dynamic> data;
@@ -78,6 +81,9 @@ class _FormKunjunganState extends State<FormKunjungan> {
   void dispose() {
     noMeteranController.dispose();
     idGasPelangganController.dispose();
+
+    DbHelper.instance.close();
+
     super.dispose();
   }
 
@@ -370,8 +376,42 @@ class _FormKunjunganState extends State<FormKunjungan> {
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
                             backgroundColor: Colors.red),
-                        onPressed: () {
-                          DraftHelper().saveDataDraft(data);
+                        onPressed: () async {
+                          //DraftHelper().saveDataDraft(data);
+
+                          final d = DraftModel(
+                            idPengguna: data['id_pengguna'],
+                            idKunjungan: data['id_kunjungan'],
+                            idGasPelanggan: data['id_gas_pelanggan'],
+                            fotoMeteran: "",
+                            fotoSelfie: data['foto_selfie'],
+                            latitudeD: data['latitude'],
+                            longitudeD: data['longitude'],
+                            pembacaanMeter: data['pembacaan_meter'],
+                            tglKunjunganD: data['tgl_kunjungan'],
+                          );
+
+                          int id = await DbHelper.instance.create(d);
+
+                          await DraftHelper().simpanGambar(
+                              'foto_meter_$id', data['foto_meteran']);
+                          await DraftHelper().simpanGambar(
+                              'foto_selfie_$id', data['foto_selfie']);
+
+                          final baruD = DraftModel(
+                            id: id,
+                            idPengguna: data['id_pengguna'],
+                            idKunjungan: data['id_kunjungan'],
+                            idGasPelanggan: data['id_gas_pelanggan'],
+                            fotoMeteran: 'foto_meter_$id',
+                            fotoSelfie: 'foto_selfie_$id',
+                            latitudeD: data['latitude'],
+                            longitudeD: data['longitude'],
+                            pembacaanMeter: data['pembacaan_meter'],
+                            tglKunjunganD: data['tgl_kunjungan'],
+                          );
+
+                          await DbHelper.instance.update(baruD);
 
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

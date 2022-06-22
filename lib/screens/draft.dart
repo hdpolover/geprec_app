@@ -1,11 +1,9 @@
-import 'dart:convert';
-
-import 'package:fancy_shimmer_image/fancy_shimmer_image.dart';
 import 'package:flutter/material.dart';
-import 'package:geprec_app/models/riwayat_kunjungan_model.dart';
+import 'package:geprec_app/db/db_helper.dart';
+import 'package:geprec_app/db/draft_model.dart';
 import 'package:geprec_app/screens/widgets/draft_helper.dart';
+import 'package:geprec_app/screens/widgets/draft_kunjungan_item.dart.dart';
 import 'package:geprec_app/services/kunjungan_service.dart';
-import 'package:intl/intl.dart';
 
 class Draft extends StatefulWidget {
   const Draft({Key? key}) : super(key: key);
@@ -15,18 +13,39 @@ class Draft extends StatefulWidget {
 }
 
 class _DraftState extends State<Draft> {
-  Map<String, dynamic>? draftKunjungan;
+  late List<DraftModel> draftKunjungan;
   bool isLoading = false;
+  bool isLoadingBtn = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    getData();
+  }
+
+  Future getData() async {
+    setState(() => isLoading = true);
+
+    List<DraftModel> a = await DbHelper.instance.readAllDrafts();
+
+    setState(() {
+      draftKunjungan = a;
+      isLoading = false;
+    });
+  }
+
+  @override
+  void dispose() {
+    DbHelper.instance.close();
+
+    super.dispose();
+  }
 
   getDataDratKunjungan() {
-    return FutureBuilder(
-      future: DraftHelper().getDataDraft(),
-      builder: (context, snapshot) {
-        RiwayatKunjunganModel.fromMap(snapshot.data as Map<String, dynamic>);
-
-        draftKunjungan = snapshot.data as Map<String, dynamic>;
-
-        return draftKunjungan!['id_kunjungan'] == ""
+    return isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : draftKunjungan.isEmpty
             ? Column(
                 children: [
                   SizedBox(
@@ -58,147 +77,76 @@ class _DraftState extends State<Draft> {
                   ),
                 ],
               )
-            : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 20),
-                        const Text(
-                          "Tanggal Kunjungan",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          draftKunjungan!['tgl_kunjungan'],
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "Foto Meteran",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Image.memory(base64Decode(
-                            draftKunjungan!['foto_meteran'].substring(22))),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "Foto Selfie",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        draftKunjungan!['foto_selfie'] == ""
-                            ? Center(
-                                child: FancyShimmerImage(
-                                  boxFit: BoxFit.cover,
-                                  imageUrl: "",
-                                  errorWidget: Image.network(
-                                      'https://i0.wp.com/www.dobitaobyte.com.br/wp-content/uploads/2016/02/no_image.png?ssl=1'),
-                                ),
-                              )
-                            : Image.memory(base64Decode(
-                                draftKunjungan!['foto_selfie'].substring(22))),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "ID Gas Pelanggan",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          draftKunjungan!['id_gas_pelanggan'],
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "Pembacaan Meteran",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(draftKunjungan!['pembacaan_meter']),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.05),
-                        SizedBox(
-                          height: 50,
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              onPrimary: Colors.white, // foreground
-                            ),
-                            child: isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text('Simpan'),
-                            onPressed: () {
-                              setState(() {
-                                isLoading = true;
-                              });
-
-                              simpanData();
-                            },
-                          ),
-                        ),
-                        SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.05),
-                      ],
-                    ),
-                  ),
-                ],
+            : ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                itemCount: draftKunjungan.length,
+                itemBuilder: (context, index) {
+                  return DraftKunjunganItem(
+                    draft: draftKunjungan[index],
+                    context: context,
+                  );
+                },
               );
-      },
-    );
   }
 
   simpanData() async {
-    Map<String, dynamic> data = {
-      "id_pengguna": draftKunjungan!['id_pengguna'],
-      "id_kunjungan": draftKunjungan!['id_kunjungan'],
-      "foto_meteran": draftKunjungan!['foto_meteran'],
-      "foto_selfie": draftKunjungan!['foto_selfie'],
-      "pembacaan_meter": draftKunjungan!['pembacaan_meter'],
-      "id_gas_pelanggan": draftKunjungan!['id_gas_pelanggan'],
-      "latitude": draftKunjungan!['latitude'],
-      "longitude": draftKunjungan!['longitude'],
-      "tgl_kunjungan": DateFormat('yyyy-MM-dd kk:mm:ss')
-          .format(DateTime.parse(draftKunjungan!['tgl_kunjungan'])),
-    };
+    setState(() {
+      isLoadingBtn = true;
+    });
 
-    bool result = await KunjunganService.ngunjungi(data);
+    for (int i = 0; i < draftKunjungan.length; i++) {
+      String a = await DraftHelper().getGambar(draftKunjungan[i].fotoMeteran);
+      String b = await DraftHelper().getGambar(draftKunjungan[i].fotoSelfie);
 
-    if (result) {
-      DraftHelper().hapusDataDraft();
+      Map<String, dynamic> data = {
+        "id_pengguna": draftKunjungan[i].idPengguna,
+        "id_kunjungan": draftKunjungan[i].idKunjungan,
+        "foto_meteran": a,
+        "foto_selfie": b,
+        "pembacaan_meter": draftKunjungan[i].pembacaanMeter,
+        "id_gas_pelanggan": draftKunjungan[i].idGasPelanggan,
+        "latitude": draftKunjungan[i].latitudeD,
+        "longitude": draftKunjungan[i].longitudeD,
+        "tgl_kunjungan": draftKunjungan[i].tglKunjunganD,
+      };
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: Text("Berhasil menambahkan kunjungan"),
-          ),
-        ),
-      );
-
-      setState(() {
-        isLoading = false;
-      });
-
-      Navigator.of(context).pop();
-      Navigator.of(context).pop();
-    } else {
-      setState(() {
-        isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: Text("Gagal menambahkan kunjungan. Coba lagi."),
-          ),
-        ),
-      );
+      await KunjunganService.ngunjungi(data);
+      await DraftHelper().hapusGambar(draftKunjungan[i].fotoMeteran);
+      await DraftHelper().hapusGambar(draftKunjungan[i].fotoSelfie);
+      await DbHelper.instance.delete(draftKunjungan[i].id!);
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Text("Berhasil menambahkan semua draft kunjungan"),
+        ),
+      ),
+    );
+
+    setState(() {
+      isLoadingBtn = false;
+    });
+
+    Navigator.of(context).pop();
+    Navigator.of(context).pop();
+
+    // } else {
+    //   setState(() {
+    //     isLoadingBtn = false;
+    //   });
+
+    //   ScaffoldMessenger.of(context).showSnackBar(
+    //     const SnackBar(
+    //       content: Padding(
+    //         padding: EdgeInsets.only(bottom: 10),
+    //         child: Text("Gagal menambahkan draft kunjungan. Coba lagi."),
+    //       ),
+    //     ),
+    //   );
+    // }
   }
 
   @override
@@ -209,9 +157,37 @@ class _DraftState extends State<Draft> {
         centerTitle: true,
         elevation: 1,
       ),
-      body: SingleChildScrollView(
-        child: getDataDratKunjungan(),
-      ),
+      floatingActionButton: isLoading
+          ? null
+          : draftKunjungan.isEmpty
+              ? null
+              : FloatingActionButton.extended(
+                  heroTag: "button2",
+                  onPressed: isLoadingBtn
+                      ? null
+                      : () {
+                          //_showSettingsBottomSheet();
+                          // pushNewScreen(
+                          //   context,
+                          //   screen: DaftarKunjungan(
+                          //     pengguna: widget.pengguna,
+                          //   ),
+                          //   withNavBar: false, // OPTIONAL VALUE. True by default.
+                          //   pageTransitionAnimation: PageTransitionAnimation.fade,
+                          // );
+                          simpanData();
+                        },
+                  icon: isLoadingBtn ? null : const Icon(Icons.save),
+                  label: isLoadingBtn
+                      ? const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Simpan Semua Draft'),
+                ),
+      body: getDataDratKunjungan(),
     );
   }
 }

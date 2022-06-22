@@ -1,6 +1,24 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DraftHelper {
+  Future simpanGambar(String key, String data) async {
+    var prefs = await SharedPreferences.getInstance();
+
+    prefs.setString(key, data);
+  }
+
+  Future hapusGambar(String key) async {
+    var prefs = await SharedPreferences.getInstance();
+
+    prefs.remove(key);
+  }
+
+  Future<String> getGambar(String key) async {
+    var prefs = await SharedPreferences.getInstance();
+
+    return prefs.getString(key) ?? "";
+  }
+
   Future saveDataDraft(Map<String, dynamic> data) async {
     var prefs = await SharedPreferences.getInstance();
 

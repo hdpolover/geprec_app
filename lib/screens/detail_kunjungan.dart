@@ -518,7 +518,7 @@ class _DetailKunjunganState extends State<DetailKunjungan> {
                                 content: Padding(
                                   padding: EdgeInsets.only(bottom: 10),
                                   child: Text(
-                                      "Berhasil menghapus draft kunjungan."),
+                                      "Berhasil menghapus item kunjungan."),
                                 ),
                               ),
                             );

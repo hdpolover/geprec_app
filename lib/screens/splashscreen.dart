@@ -1,7 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:geprec_app/screens/dashboard.dart';
 import 'package:geprec_app/screens/login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/pengguna_model.dart';
+import '../services/user_service.dart';
 
 class Splashscreen extends StatefulWidget {
   const Splashscreen({Key? key}) : super(key: key);
@@ -18,7 +23,17 @@ class _SplashscreenState extends State<Splashscreen> {
   }
 
   _goNext() async {
-    _goto(const Login());
+    bool loginStatus = await getLoginStatus();
+    String username = await getLoginData("username");
+    String password = await getLoginData("password");
+
+    if (loginStatus) {
+      PenggunaModel pengguna = await UserService.login(username, password);
+
+      _goto(Dashboard(pengguna: pengguna));
+    } else {
+      _goto(const Login());
+    }
   }
 
   _goto(Widget name) {
@@ -28,6 +43,16 @@ class _SplashscreenState extends State<Splashscreen> {
         builder: (ctx) => name,
       ),
     );
+  }
+
+  Future<bool> getLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('loginStatus') ?? false;
+  }
+
+  Future<String> getLoginData(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(key) ?? "";
   }
 
   @override

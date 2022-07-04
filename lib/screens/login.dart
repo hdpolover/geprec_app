@@ -4,6 +4,7 @@ import 'package:geprec_app/screens/dashboard.dart';
 import 'package:geprec_app/services/user_service.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/pengguna_model.dart';
 
@@ -164,6 +165,9 @@ class _LoginState extends State<Login> {
                                   usernameController.text,
                                   passwordController.text);
 
+                              saveUserLoginsDetails(usernameController.text,
+                                  passwordController.text, true);
+
                               setState(() {
                                 isLoading = false;
                               });
@@ -205,5 +209,13 @@ class _LoginState extends State<Login> {
         ),
       ),
     );
+  }
+
+  Future saveUserLoginsDetails(
+      String username, String password, bool loginStatus) async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setString("username", username);
+    prefs.setString("password", password);
+    prefs.setBool("loginStatus", loginStatus);
   }
 }

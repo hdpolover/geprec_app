@@ -4,6 +4,7 @@ import 'package:geprec_app/screens/draft.dart';
 import 'package:geprec_app/screens/login.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Profil extends StatefulWidget {
   PenggunaModel pengguna;
@@ -92,6 +93,8 @@ class _ProfilState extends State<Profil> {
                     icon: const Icon(Icons.exit_to_app),
                     label: const Text('Keluar'),
                     onPressed: () async {
+                      saveLogout();
+
                       pushNewScreen(
                         context,
                         screen: const Login(),
@@ -117,5 +120,12 @@ class _ProfilState extends State<Profil> {
         ),
       ),
     );
+  }
+
+  static Future saveLogout() async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setString("usermame", "");
+    prefs.setString("password", "");
+    prefs.setBool("loginStatus", false);
   }
 }

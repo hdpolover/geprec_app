@@ -258,6 +258,83 @@ class _FormKunjunganState extends State<FormKunjungan> {
                     },
                   ),
                 ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 50,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.red,
+                      onPrimary: Colors.white, // foreground
+                    ),
+                    child: isLoading
+                        ? const CircularProgressIndicator(
+                            color: Colors.white,
+                          )
+                        : const Text('Draft'),
+                    onPressed: () async {
+                      Map<String, dynamic> data = {
+                        "id_pengguna": widget.data['id_pengguna'],
+                        "id_kunjungan": widget.data['id_kunjungan'],
+                        "foto_meteran": base64ImageFile,
+                        "foto_selfie": widget.data['foto_selfie'],
+                        "pembacaan_meter": noMeteranController.text,
+                        "id_gas_pelanggan": idGasPelangganController.text,
+                        "latitude": _pos!.latitude.toString(),
+                        "longitude": _pos!.longitude.toString(),
+                        "tgl_kunjungan": DateFormat('yyyy-MM-dd kk:mm:ss')
+                            .format(DateTime.now()),
+                      };
+
+                      final d = DraftModel(
+                        idPengguna: data['id_pengguna'],
+                        idKunjungan: data['id_kunjungan'],
+                        idGasPelanggan: data['id_gas_pelanggan'],
+                        fotoMeteran: "",
+                        fotoSelfie: data['foto_selfie'],
+                        latitudeD: data['latitude'],
+                        longitudeD: data['longitude'],
+                        pembacaanMeter: data['pembacaan_meter'],
+                        tglKunjunganD: data['tgl_kunjungan'],
+                      );
+
+                      int id = await DbHelper.instance.create(d);
+
+                      await DraftHelper()
+                          .simpanGambar('foto_meter_$id', data['foto_meteran']);
+                      await DraftHelper()
+                          .simpanGambar('foto_selfie_$id', data['foto_selfie']);
+
+                      final baruD = DraftModel(
+                        id: id,
+                        idPengguna: data['id_pengguna'],
+                        idKunjungan: data['id_kunjungan'],
+                        idGasPelanggan: data['id_gas_pelanggan'],
+                        fotoMeteran: 'foto_meter_$id',
+                        fotoSelfie: 'foto_selfie_$id',
+                        latitudeD: data['latitude'],
+                        longitudeD: data['longitude'],
+                        pembacaanMeter: data['pembacaan_meter'],
+                        tglKunjunganD: data['tgl_kunjungan'],
+                      );
+
+                      await DbHelper.instance.update(baruD);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Padding(
+                            padding: EdgeInsets.only(bottom: 10),
+                            child: Text("Berhasil menyimpan draft kunjungan"),
+                          ),
+                        ),
+                      );
+
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ),
               ],
             ),
           ),

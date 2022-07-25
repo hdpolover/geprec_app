@@ -127,7 +127,7 @@ class _SplashscreenState extends State<Splashscreen> {
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.2),
                 Text(
-                  "v 1.0.0",
+                  "v 1.0.3",
                   style: Theme.of(context).textTheme.caption,
                 ),
               ],

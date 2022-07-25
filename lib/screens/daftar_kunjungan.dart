@@ -20,7 +20,7 @@ class _DaftarKunjunganState extends State<DaftarKunjungan> {
 
   @override
   void initState() {
-    //_getDaftar();
+    _getDaftar();
     super.initState();
   }
 

@@ -20,8 +20,8 @@ class TambahKunjungan extends StatefulWidget {
 }
 
 class _TambahKunjunganState extends State<TambahKunjungan> {
-  TextEditingController noMeteranController = TextEditingController();
-  TextEditingController noPelangganController = TextEditingController();
+  TextEditingController _noMeteranController = TextEditingController();
+  TextEditingController _idPelangganController = TextEditingController();
   TextEditingController addressController = TextEditingController();
   TextEditingController namaRumahController = TextEditingController();
   TextEditingController noteController = TextEditingController();
@@ -37,8 +37,8 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
 
   @override
   void dispose() {
-    noMeteranController.dispose();
-    noPelangganController.dispose();
+    _noMeteranController.dispose();
+    _idPelangganController.dispose();
     addressController.dispose();
     namaRumahController.dispose();
     noteController.dispose();
@@ -192,6 +192,36 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text(
+                  "ID Pelanggan",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _idPelangganController,
+                  keyboardType: TextInputType.text,
+                  validator: _wajibValidator,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Masukan ID Pelanggan',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Nomor Meteran",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                TextFormField(
+                  controller: _noMeteranController,
+                  keyboardType: TextInputType.number,
+                  validator: _wajibValidator,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'Masukan Nomor Meteran',
+                  ),
+                ),
+                const SizedBox(height: 20),
                 const Text(
                   "Nama Rumah",
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -352,6 +382,8 @@ class _TambahKunjunganState extends State<TambahKunjungan> {
       'latitude_baru': _currentPosition!.latitude,
       'longitude_baru': _currentPosition!.longitude,
       'foto_kunjungan': base64ImageFile ?? "",
+      'id_pelanggan': _idPelangganController.text.trim(),
+      'nomor_meteran': _noMeteranController.text.trim(),
     };
 
     bool result = await KunjunganService.tambahKunjungan(data);

@@ -131,6 +131,8 @@ class KunjunganService {
         'latitude_baru': data['latitude_baru'].toString(),
         'longitude_baru': data['longitude_baru'].toString(),
         'foto_kunjungan': data['foto_kunjungan'],
+        'id_pelanggan': data['id_pelanggan'],
+        'nomor_meteran': data['nomor_meteran'],
       }),
     );
 
@@ -142,7 +144,7 @@ class KunjunganService {
   }
 
   static Future<List<KunjunganModel>> getDaftarKunjungan(String idUser) async {
-    String url = "${AppConstants.baseUrl}api/kunjungan/list_kunjungan//$idUser";
+    String url = "${AppConstants.baseUrl}api/kunjungan/list_kunjungan/$idUser";
 
     final response = await http.get(Uri.parse(url));
 
@@ -175,6 +177,21 @@ class KunjunganService {
       return DateTime.parse(data['tgl_kunjungan']);
     } else {
       throw Exception('Unexpected error occured!');
+    }
+  }
+
+  static Future<int> checkKunjungan(String idUser, String idKunjungan) async {
+    String url =
+        "${AppConstants.baseUrl}api/kunjungan/check_kunjungan?id_pengguna=$idUser&id_kunjungan=$idKunjungan";
+
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      var jsonData = jsonDecode(response.body)['data'];
+      return jsonData;
+    } else {
+      var jsonData = jsonDecode(response.body)['data'];
+      return jsonData;
     }
   }
 }

@@ -9,6 +9,8 @@ class KunjunganModel {
   String? catatan;
   String? fotoKunjungan;
   String? resetLokasi;
+  int? nomorMeteran;
+  String? idPelanggan;
 
   KunjunganModel(
     this.idKunjungan,
@@ -21,6 +23,8 @@ class KunjunganModel {
     this.longitudeBaru,
     this.fotoKunjungan,
     this.resetLokasi,
+    this.idPelanggan,
+    this.nomorMeteran,
   );
 
   factory KunjunganModel.fromMap(Map<String, dynamic> json) {
@@ -35,6 +39,8 @@ class KunjunganModel {
       json['longitude_baru'],
       json['foto_kunjungan'],
       json['reset_lokasi'],
+      json['id_pelanggan'],
+      json['nomor_meteran'],
     );
   }
 
@@ -50,6 +56,8 @@ class KunjunganModel {
       json['longitude_baru'],
       json['foto_kunjungan'],
       json['reset_lokasi'],
+      json['id_pelanggan'],
+      int.parse(json['nomor_meteran']),
     );
   }
 }
